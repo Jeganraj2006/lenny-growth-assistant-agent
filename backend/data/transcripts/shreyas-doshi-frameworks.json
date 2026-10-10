@@ -1,0 +1,7 @@
+{
+  "id": "shreyas-doshi-frameworks",
+  "title": "Shreyas Doshi on Product Management Frameworks, LNO Prioritization, and Pre-mortems",
+  "guest": "Shreyas Doshi",
+  "url": "https://www.lennysnewsletter.com/p/shreyas-doshi-frameworks",
+  "content": "Lenny Rachitsky: Welcome to Lenny's Podcast. My guest today is Shreyas Doshi, former product leader at Stripe, Twitter, Google, and Yahoo. Shreyas, welcome.\n\nShreyas Doshi: Thanks Lenny, great to be here.\n\nLenny Rachitsky: You are famous for your mental models for PMs. Tell us about the LNO framework for time management.\n\nShreyas Doshi: The LNO framework divides tasks into Leverage, Neutral, and Overhead. Leverage tasks are 10x impact activities like strategic specs or customer interviews where perfection matters. Neutral tasks are 1x standard execution tasks where doing a solid job is enough. Overhead tasks are low-value operational tasks that should be executed as quickly as possible without overthinking. Most PMs burn out because they try to treat Overhead tasks with Leverage-level perfection.\n\nLenny Rachitsky: How do you conduct an effective product pre-mortem before launch?\n\nShreyas Doshi: A pre-mortem takes place before code is shipped. Gather the team and ask: Imagine it is one year from today and our product launch has failed disastrously. What caused the failure? Writing down failure scenarios in advance unlocks honest discussion about hidden risks, dependencies, and positioning gaps that team members were hesitant to raise during regular planning."
+}

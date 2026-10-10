@@ -1,0 +1,7 @@
+{
+  "id": "geoff-charles-ramp-velocity",
+  "title": "Geoff Charles on Ramp's Velocity, Product Culture, and Execution Frameworks",
+  "guest": "Geoff Charles",
+  "url": "https://www.lennysnewsletter.com/p/geoff-charles-ramp-velocity",
+  "content": "Lenny Rachitsky: Welcome to Lenny's Podcast. Today my guest is Geoff Charles, VP of Product at Ramp, one of the fastest growing B2B fintech startups in history.\n\nGeoff Charles: Thanks Lenny, excited to discuss Ramp's product engine.\n\nLenny Rachitsky: Ramp is famous for shipping features at incredible speed. How do you maintain product velocity as the company scales?\n\nGeoff Charles: Speed is a habit and a cultural choice. We keep team units small and empowered with end-to-end ownership. We deploy multiple times per day and iterate directly in production based on real customer usage data. We avoid long specification phases; instead of writing 30-page PRDs, we write concise 1-page briefs and move straight into rapid prototyping.\n\nLenny Rachitsky: How do you balance rapid feature shipping with technical quality and risk management in fintech?\n\nGeoff Charles: We separate financial safety controls from product delivery speed. Core accounting ledgers and underwriting engines have strict automated test coverage and multi-stage compliance checks, while user interface flows and integration tools iterate rapidly."
+}
