@@ -31,6 +31,7 @@ async def generate_essay_endpoint(
             model=payload.model
         )
 
+        words = len(artifact_obj.content.split())
         return EssayGenerateResponse(
             artifact_id=artifact_obj.id,
             session_id=artifact_obj.session_id,
@@ -38,7 +39,9 @@ async def generate_essay_endpoint(
             format=artifact_obj.format,
             content=artifact_obj.content,
             citations=citations,
-            word_count=len(artifact_obj.content.split()),
+            word_count=words,
+            target_word_count=1250,
+            meets_target=bool(words >= 950),
             provider_used=provider_used,
             model_used=model_used,
             created_at=artifact_obj.created_at

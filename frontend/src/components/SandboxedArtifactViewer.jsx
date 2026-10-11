@@ -2,10 +2,56 @@ import React, { useState } from 'react';
 import { sanitizeArtifactHtml } from '../utils/sanitizer';
 
 /**
+ * Converts basic markdown formatting into HTML elements for sandboxed rendering.
+ */
+function markdownToHtml(md) {
+  if (!md || typeof md !== 'string') return '';
+  if (/<[a-z][\s\S]*>/i.test(md) && !md.startsWith('#')) {
+    return md;
+  }
+  const lines = md.split('\n');
+  const htmlLines = [];
+  let inList = false;
+
+  for (let line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('# ')) {
+      if (inList) { htmlLines.push('</ul>'); inList = false; }
+      htmlLines.push(`<h1>${trimmed.slice(2)}</h1>`);
+    } else if (trimmed.startsWith('## ')) {
+      if (inList) { htmlLines.push('</ul>'); inList = false; }
+      htmlLines.push(`<h2>${trimmed.slice(3)}</h2>`);
+    } else if (trimmed.startsWith('### ')) {
+      if (inList) { htmlLines.push('</ul>'); inList = false; }
+      htmlLines.push(`<h3>${trimmed.slice(4)}</h3>`);
+    } else if (trimmed.startsWith('#### ')) {
+      if (inList) { htmlLines.push('</ul>'); inList = false; }
+      htmlLines.push(`<h4>${trimmed.slice(5)}</h4>`);
+    } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      if (!inList) { htmlLines.push('<ul>'); inList = true; }
+      htmlLines.push(`<li>${trimmed.slice(2)}</li>`);
+    } else if (trimmed.startsWith('> ')) {
+      if (inList) { htmlLines.push('</ul>'); inList = false; }
+      htmlLines.push(`<blockquote>${trimmed.slice(2)}</blockquote>`);
+    } else if (!trimmed) {
+      if (inList) { htmlLines.push('</ul>'); inList = false; }
+    } else {
+      if (inList) { htmlLines.push('</ul>'); inList = false; }
+      const formatted = trimmed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      htmlLines.push(`<p>${formatted}</p>`);
+    }
+  }
+  if (inList) { htmlLines.push('</ul>'); }
+  return htmlLines.join('\n');
+}
+
+/**
  * Builds a clean HTML document string for srcDoc rendering inside the sandboxed iframe.
  */
 function buildSrcDoc(artifact) {
-  const cleanBody = sanitizeArtifactHtml(artifact?.content || '');
+  const raw = artifact?.content || '';
+  const converted = artifact?.format === 'markdown' ? markdownToHtml(raw) : raw;
+  const cleanBody = sanitizeArtifactHtml(converted);
   const title = artifact?.title || 'Artifact Preview';
 
   return `
@@ -29,8 +75,11 @@ function buildSrcDoc(artifact) {
           margin-bottom: 0.5em;
         }
         h1 { border-bottom: 1px solid #1e293b; padding-bottom: 8px; font-size: 1.5rem; color: #818cf8; }
-        p { margin-bottom: 1em; color: #cbd5e1; font-size: 0.95rem; }
-        ul, ol { padding-left: 1.5em; color: #cbd5e1; }
+        h2 { font-size: 1.25rem; color: #a5b4fc; margin-top: 1.75em; border-bottom: 1px solid #1e293b/60; padding-bottom: 4px; }
+        h3 { font-size: 1.1rem; color: #cbd5e1; }
+        p { margin-bottom: 1.1em; color: #cbd5e1; font-size: 0.95rem; }
+        strong { color: #f8fafc; }
+        ul, ol { padding-left: 1.5em; color: #cbd5e1; margin-bottom: 1.1em; }
         li { margin-bottom: 0.5em; }
         code { background: #0f172a; border: 1px solid #1e293b; padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 0.85rem; }
         pre { background: #0f172a; border: 1px solid #1e293b; padding: 16px; border-radius: 8px; overflow-x: auto; font-family: monospace; color: #e2e8f0; }
@@ -51,6 +100,8 @@ export default function SandboxedArtifactViewer({ artifact, onClose }) {
   if (!artifact) return null;
 
   const srcDocHtml = buildSrcDoc(artifact);
+  const words = (artifact.content || '').trim().split(/\s+/).filter(Boolean).length;
+  const isTargetMet = words >= 950;
 
   return (
     <div className="flex flex-col h-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
@@ -61,6 +112,18 @@ export default function SandboxedArtifactViewer({ artifact, onClose }) {
             {artifact.format}
           </span>
           <h3 className="text-sm font-semibold text-slate-100 truncate max-w-xs">{artifact.title}</h3>
+          
+          {words > 0 && (
+            <span className={`text-[11px] px-2 py-0.5 rounded-full font-mono border hidden sm:inline-flex items-center space-x-1 ${
+              isTargetMet 
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+            }`}>
+              <span>📊 {words} words</span>
+              <span className="text-slate-500">|</span>
+              <span className="text-[10px] text-slate-400">Target ~1,250</span>
+            </span>
+          )}
         </div>
 
         <div className="flex items-center space-x-2">

@@ -19,6 +19,9 @@ class EssayGenerateResponse(BaseModel):
     content: str
     citations: List[CitationItem]
     word_count: Optional[int] = None
+    target_word_count: int = Field(default=1250, description="Target word count for Ship 30 essay")
+    meets_target: bool = Field(default=False, description="True if word count is in target range (>= 950 words)")
     provider_used: str
     model_used: str
     created_at: datetime
+

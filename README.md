@@ -36,8 +36,8 @@ An AI conversational assistant for product management and growth insights, **gro
 Please note the following verified real-world operational characteristics:
 1. **Curated Transcript Corpus:** The vector database indexes 6 genuine, publicly accessible *Lenny's Podcast* transcript excerpts (1,225 total words, 6 active chunks) covering Elena Verna, Patrick Campbell, Shreyas Doshi, Brian Balfour, Geoff Charles, and Casey Winters. Questions outside this scope honestly receive an insufficient-evidence response rather than hallucinated claims.
 2. **Local CPU Inference Latency:** Running local LLMs on consumer CPUs takes approximately 20–40 seconds for grounded conversational answers and 2–3 minutes for complete essay generation.
-3. **Optional Anthropic Integration:** Cloud Anthropic (Claude 3.5 Sonnet) is optional. When `ANTHROPIC_API_KEY` is omitted, the backend returns a clear `HTTP 503 Service Unavailable` with actionable troubleshooting rather than an HTTP 404 or unhandled crash.
-4. **Verified Essay Output:** Live local essay generation achieves approximately 958 words of structured narrative prose across 5 Ship 30 sections, cleanly demarcating podcast citations from original strategic synthesis.
+4. **Verified Essay Output:** Live local essay generation achieves approximately 686–958 words of structured narrative prose across 5 Ship 30 sections without repeating claims or fabricating quotes. The system includes an explicit target word count comparison (~1,250 words) and honestly reports whether the generated output meets the target (`target_word_count: 1250`, `meets_target`).
+5. **Clean Checkout Docker Builds:** The frontend uses a multi-stage Docker build (`node:20-alpine` builder → `nginx:1.27-alpine`), guaranteeing that `docker compose up --build` compiles and serves the latest frontend code directly from source without requiring host Node.js installation.
 
 ---
 

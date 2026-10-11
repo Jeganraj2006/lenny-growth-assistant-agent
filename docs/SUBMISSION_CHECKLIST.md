@@ -41,7 +41,8 @@ In accordance with honest evaluation criteria, the following real operational ch
 - **Corpus Scope:** Grounded in 6 genuine, publicly accessible *Lenny's Podcast* transcript excerpts (1,225 words, 6 chunks). Out-of-corpus domain queries return an honest insufficient-evidence response.
 - **CPU Generation Latency:** Local Ollama on CPU takes ~25–35s for chat responses and ~2–3 minutes for complete long-form essay generation.
 - **Optional Anthropic Integration:** Returns clean `HTTP 503 Service Unavailable` with diagnostic instructions when `ANTHROPIC_API_KEY` is omitted, rather than crashing or returning HTTP 404.
-- **Verified Essay Length:** Live essay generation on local Ollama yields ~958 words across 5 structured Ship 30 sections with genuine citations and demarcated original analysis.
+- **Verified Essay Length:** Live essay generation on local Ollama yields ~686–958 words across 5 structured Ship 30 sections with genuine citations and demarcated original analysis, with explicit tracking against the ~1,250-word target.
+- **Clean Docker Multi-Stage Build:** Frontend Dockerfile compiles directly from source via multi-stage Node/Nginx containers with `.dockerignore` filters, ensuring clean checkouts build without host Node.js.
 
 ---
 

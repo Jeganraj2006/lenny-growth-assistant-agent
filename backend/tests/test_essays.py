@@ -287,6 +287,8 @@ async def test_essay_word_count_and_structure_validation():
             assert res.status_code == 201
             data = res.json()
             assert data["word_count"] == actual_words
+            assert data["target_word_count"] == 1250
+            assert "meets_target" in data
             assert "Original Analysis & Strategic Synthesis" in data["content"]
             assert len(data["citations"]) >= 1
 

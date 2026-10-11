@@ -29,9 +29,11 @@ export default function App() {
   const [isSending, setIsSending] = useState(false);
   const [chatError, setChatError] = useState(null);
   const [activeTab, setActiveTab] = useState('chat'); // 'chat', 'artifacts', or 'diagnostics'
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
   const isSendingRef = useRef(false);
+  const lastPromptRef = useRef('');
 
   useEffect(() => {
     fetchHealthAndProof();
@@ -163,12 +165,13 @@ export default function App() {
     }
   };
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = async (e, retryText = null) => {
     e?.preventDefault();
-    if (!inputMessage.trim() || isSendingRef.current || !activeSessionId) return;
+    const userText = retryText || inputMessage.trim();
+    if (!userText || isSendingRef.current || !activeSessionId) return;
 
-    const userText = inputMessage.trim();
-    setInputMessage('');
+    lastPromptRef.current = userText;
+    if (!retryText) setInputMessage('');
     setChatError(null);
     isSendingRef.current = true;
     setIsSending(true);
@@ -257,28 +260,47 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
+      {/* Mobile Drawer Backdrop */}
+      {isMobileSidebarOpen && (
+        <div 
+          onClick={() => setIsMobileSidebarOpen(false)}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-30 md:hidden"
+        />
+      )}
+
       {/* Sidebar Navigation */}
-      <aside className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col p-4 shrink-0">
-        <div className="flex items-center space-x-3 mb-6 px-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
-            L
+      <aside className={`
+        ${isMobileSidebarOpen ? 'fixed inset-y-0 left-0 z-40 shadow-2xl flex' : 'hidden'}
+        md:relative md:flex w-72 bg-slate-900 border-r border-slate-800 flex-col p-4 shrink-0 transition-all
+      `}>
+        <div className="flex items-center justify-between mb-6 px-2">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
+              L
+            </div>
+            <div>
+              <h1 className="font-semibold text-sm tracking-wide text-slate-100">Lenny Assistant</h1>
+              <p className="text-xs text-slate-400">PM & Growth Intelligence</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-semibold text-sm tracking-wide text-slate-100">Lenny Assistant</h1>
-            <p className="text-xs text-slate-400">PM & Growth Intelligence</p>
-          </div>
+          <button
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="md:hidden text-slate-400 hover:text-slate-200 text-sm p-1"
+          >
+            ✕
+          </button>
         </div>
 
         <div className="space-y-2">
           <button 
-            onClick={handleCreateSession}
+            onClick={() => { handleCreateSession(); setIsMobileSidebarOpen(false); }}
             className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition flex items-center justify-center space-x-2 shadow-md shadow-indigo-600/20"
           >
             <span>+ New Chat Session</span>
           </button>
 
           <button 
-            onClick={() => { setShowEssayModal(true); setEssayError(null); }}
+            onClick={() => { setShowEssayModal(true); setEssayError(null); setIsMobileSidebarOpen(false); }}
             disabled={!activeSessionId}
             className="w-full py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 font-medium text-xs border border-slate-700 transition flex items-center justify-center space-x-2"
           >
@@ -289,19 +311,19 @@ export default function App() {
         {/* Tab Navigation */}
         <div className="mt-4 flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs font-medium">
           <button 
-            onClick={() => setActiveTab('chat')}
+            onClick={() => { setActiveTab('chat'); setIsMobileSidebarOpen(false); }}
             className={`flex-1 py-1.5 rounded-md transition ${activeTab === 'chat' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
           >
             Chat
           </button>
           <button 
-            onClick={() => setActiveTab('artifacts')}
+            onClick={() => { setActiveTab('artifacts'); setIsMobileSidebarOpen(false); }}
             className={`flex-1 py-1.5 rounded-md transition ${activeTab === 'artifacts' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
           >
             Artifacts ({artifacts.length})
           </button>
           <button 
-            onClick={() => setActiveTab('diagnostics')}
+            onClick={() => { setActiveTab('diagnostics'); setIsMobileSidebarOpen(false); }}
             className={`flex-1 py-1.5 rounded-md transition ${activeTab === 'diagnostics' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
           >
             Diag
@@ -320,7 +342,7 @@ export default function App() {
             sessions.map(s => (
               <div 
                 key={s.id}
-                onClick={() => { setActiveSessionId(s.id); }}
+                onClick={() => { setActiveSessionId(s.id); setIsMobileSidebarOpen(false); }}
                 className={`group px-3 py-2 rounded-lg text-sm cursor-pointer transition flex items-center justify-between ${
                   s.id === activeSessionId
                     ? 'bg-slate-800/80 text-indigo-400 font-medium border border-indigo-500/30'
@@ -349,18 +371,25 @@ export default function App() {
       {/* Main Workspace Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
         {/* Top Header */}
-        <header className="h-14 border-b border-slate-800 px-6 flex items-center justify-between bg-slate-900/50 backdrop-blur shrink-0">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm font-semibold text-slate-200 truncate max-w-md">
+        <header className="h-14 border-b border-slate-800 px-4 md:px-6 flex items-center justify-between bg-slate-900/50 backdrop-blur shrink-0">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setIsMobileSidebarOpen(prev => !prev)}
+              className="md:hidden p-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white"
+              title="Toggle Navigation Menu"
+            >
+              ☰
+            </button>
+            <span className="text-sm font-semibold text-slate-200 truncate max-w-[180px] sm:max-w-xs md:max-w-md">
               {activeSessionObj ? `💬 ${activeSessionObj.title}` : 'Lenny Growth Assistant Workspace'}
             </span>
-            <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+            <span className="hidden sm:inline-block px-2 py-0.5 text-xs rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
               Phase C6 — Demo Ready
             </span>
           </div>
 
           <div className="flex items-center space-x-3">
-            <label className="text-xs text-slate-400">LLM Provider:</label>
+            <label className="text-xs text-slate-400 hidden sm:inline">LLM Provider:</label>
             <select 
               value={`${selectedProvider}:${selectedModel}`}
               onChange={(e) => {
@@ -564,18 +593,57 @@ export default function App() {
 
               {isSending && (
                 <div className="flex flex-col items-start">
-                  <div className="text-[10px] font-semibold text-slate-500 mb-1 px-1">Lenny Assistant</div>
-                  <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-none px-4 py-3 text-xs text-slate-400 flex items-center space-x-2 shadow-md">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
-                    <span>Searching podcast transcripts & generating grounded response...</span>
+                  <div className="text-[10px] font-semibold text-slate-500 mb-1 px-1">
+                    Lenny Assistant ({selectedProvider === 'ollama' ? `Local Ollama: ${selectedModel}` : 'Anthropic Claude'})
+                  </div>
+                  <div className="bg-slate-900 border border-indigo-500/30 rounded-2xl rounded-tl-none px-4 py-3 text-xs text-slate-300 flex items-center space-x-3 shadow-lg">
+                    <span className="relative flex h-2.5 w-2.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+                    </span>
+                    <span>
+                      {selectedProvider === 'ollama' 
+                        ? `Generating response via local Ollama (${selectedModel}) on CPU... Typically takes 20–35s.`
+                        : 'Generating grounded response via Anthropic Claude 3.5 Sonnet...'}
+                    </span>
                   </div>
                 </div>
               )}
 
               {chatError && (
-                <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 px-4 py-3 rounded-xl text-xs flex items-center justify-between">
-                  <span>{chatError}</span>
-                  <button onClick={handleSendMessage} className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 rounded text-[11px]">Retry</button>
+                <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3.5 rounded-xl text-xs space-y-2">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-rose-400 text-sm leading-none mt-0.5">⚠️</span>
+                    <div className="flex-1">
+                      <strong className="block text-rose-200 mb-0.5">Request Notice</strong>
+                      <span>{chatError}</span>
+                      {(chatError.toLowerCase().includes('503') || chatError.toLowerCase().includes('api key') || chatError.toLowerCase().includes('unconfigured')) && (
+                        <p className="mt-1 text-[11px] text-slate-400">
+                          The Anthropic API key is unconfigured. Click below to switch to local Ollama.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 pt-1 border-t border-rose-500/20">
+                    {selectedProvider === 'anthropic' && (
+                      <button 
+                        onClick={() => {
+                          setSelectedProvider('ollama');
+                          setSelectedModel('llama3.2:3b');
+                          handleSendMessage(null, lastPromptRef.current);
+                        }} 
+                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[11px] font-medium transition"
+                      >
+                        Switch to Ollama (Local) & Retry
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleSendMessage(null, lastPromptRef.current)} 
+                      className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 rounded text-[11px] transition"
+                    >
+                      Retry Message
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -668,18 +736,42 @@ export default function App() {
               </div>
 
               {isGeneratingEssay && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl text-xs flex items-start space-x-2">
-                  <span className="mt-0.5">⏱️</span>
-                  <span>
-                    <strong>Generating with local Ollama</strong> — this typically takes 2–5 minutes on CPU. 
-                    Switch to Anthropic above for faster results.
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl text-xs flex items-start space-x-3">
+                  <span className="relative flex h-3 w-3 mt-1 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
                   </span>
+                  <div>
+                    <strong className="block text-amber-200 mb-0.5">
+                      Writing Ship 30 Essay with {selectedProvider === 'ollama' ? `Ollama (${selectedModel})` : 'Anthropic Claude'}
+                    </strong>
+                    <span>
+                      {selectedProvider === 'ollama'
+                        ? 'Generating ~1,250 words on local CPU typically takes 2–4 minutes. Please leave this modal open while the model writes.'
+                        : 'Generating grounded essay (~15–30s)...'}
+                    </span>
+                  </div>
                 </div>
               )}
 
               {essayError && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl text-xs">
-                  {essayError}
+                <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl text-xs space-y-2">
+                  <div><strong>Error:</strong> {essayError}</div>
+                  {selectedProvider === 'anthropic' && (
+                    <div className="pt-1 border-t border-rose-500/20">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedProvider('ollama');
+                          setSelectedModel('llama3.2:3b');
+                          setEssayError(null);
+                        }}
+                        className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[11px] font-medium transition"
+                      >
+                        Switch to Ollama (Local) & Try Again
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
